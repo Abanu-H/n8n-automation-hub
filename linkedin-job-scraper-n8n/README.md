@@ -33,10 +33,10 @@ The results from both sources are combined and saved into one Google Sheet.
 ### 📥 What Do I Need to Provide?
 The automation expects two simple inputs:
 
-| Input      | What it means                       | Example            |
-| - | -- |  |
-| `jobTitle` | The type of job you are looking for | `Golang Developer or python or ETL developer` |
-| `isRemote` | Whether you want remote jobs        | `true`             |
+| Input      | Description                         | Example                |
+| ---------- | ----------------------------------- | ------------------     |
+| `jobTitle` | The type of job you are looking for | `Golang/ETL Developer` |
+| `isRemote` | Whether you want remote jobs        | `true`                 |
 
 If we don't provide these values, the workflow uses **n8n** as the job title and **remote jobs** as the default.
 
