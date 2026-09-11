@@ -1,0 +1,684 @@
+{
+  "name": "LinkedIn Job Scraper to Google Sheets",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "job-scraper-api",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -896,
+        -528
+      ],
+      "id": "9c95572b-e802-463d-8397-56a710788bbe",
+      "name": "Webhook",
+      "webhookId": "5fe410c2-f519-41d7-bede-d96b464be758"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "param-job-title",
+              "name": "jobTitle",
+              "value": "={{ $json.jobTitle || 'n8n' }}",
+              "type": "string"
+            },
+            {
+              "id": "param-is-remote",
+              "name": "isRemote",
+              "value": "={{ $json.isRemote !== undefined ? $json.isRemote : true }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a18aee0c-8518-48fa-b0dc-c57401160462",
+      "name": "Set Search Parameters",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -448,
+        -528
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://news.google.com/rss/search?q=site:in.linkedin.com/jobs/view+\"{{ $json.jobTitle }}\"+\"India\"+{{ $json.isRemote ? 'Remote' : '' }}+when:1d&hl=en-IN&gl=IN&ceid=IN:en",
+        "options": {}
+      },
+      "id": "cb97b56a-5fa2-47f3-94e0-14ba521fe3c4",
+      "name": "Fetch LinkedIn Jobs RSS (24h)",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        -528
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().filter(item => {\n  const title = item.json.title || '';\n  // Only pass through if it explicitly references India or is from in.linkedin.com\n  return title.includes('India') || item.json.link.includes('in.linkedin.com');\n}).map(item => {\n  const rawTitle = item.json.title || '';\n  const parts = rawTitle.split(' - ');\n  \n  return {\n    json: {\n      job_title: parts[0] ? parts[0].replace(/\\s+-\\s+Google News$/, '').trim() : 'N/A',\n      company_name: parts.length > 1 ? parts[1].trim() : 'LinkedIn Search',\n      url: item.json.link,\n      job_summary: (item.json.contentSnippet || '').replace(/<[^>]*>?/gm, '').trim(),\n      job_posted_date: item.json.pubDate || new Date().toISOString()\n    }\n  };\n});"
+      },
+      "id": "2cc8cfd4-0fc2-43fa-bea9-4f20d64d4dbb",
+      "name": "Format Job Metadata",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        -528
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const city = $json[\"City\"] || \"India\";\nconst jobTitle = $json[\"Job Title\"] || \"n8n\";\nconst country = $json[\"Country\"] || \"IN\";\n\nreturn [\n  {\n    json: {\n      input: [\n        {\n          country: country,\n          keyword: jobTitle,\n          location: city,\n          time_range: \"Past week\"\n        }\n      ],\n      custom_output_fields: [\n        \"url\",\n        \"job_title\",\n        \"company_name\",\n        \"job_location\",\n        \"job_summary\",\n        \"job_employment_type\",\n        \"company_url\",\n        \"job_posted_time\",\n        \"discovery_input\",\n        \"apply_link\",\n        \"country_code\",\n        \"job_posted_date\",\n        \"application_availability\"\n      ]\n    }\n  }\n];"
+      },
+      "id": "0d8ce50e-b362-485b-93b3-31e6cd1cb548",
+      "name": "Formats form input for Bright Data LinkedIn API",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -592,
+        -128
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.brightdata.com/datasets/v3/trigger",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "dataset_id",
+              "value": "gd_lpfll7v5hcqtkxl6l"
+            },
+            {
+              "name": "include_errors",
+              "value": "true"
+            },
+            {
+              "name": "type",
+              "value": "discover_new"
+            },
+            {
+              "name": "discover_by",
+              "value": "keyword"
+            },
+            {
+              "name": "limit_per_input",
+              "value": "=5"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_BRIGHTDATA_API_TOKEN"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"input\": {{ $json[\"input\"] ? JSON.stringify($json[\"input\"]) : \"[]\" }}\n}",
+        "options": {}
+      },
+      "id": "c09fac92-3a20-4530-905f-c7230a9965b5",
+      "name": "Triggers job scraping on LinkedIn via Bright Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -368,
+        -128
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "url": "=https://api.brightdata.com/datasets/v3/progress/{{ $json.snapshot_id }}",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "format",
+              "value": "json"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_BRIGHTDATA_API_TOKEN"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b143a538-4b4d-43aa-813c-3711e1f0d8a1",
+      "name": "Checks if LinkedIn scraping is completed",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -128,
+        -128
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "or",
+          "conditions": [
+            {
+              "id": "35ed620d-b5d5-4e97-bcc5-52b283d85616",
+              "operator": {
+                "name": "filter.operator.equals",
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "ready"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "19a14bf2-7fc9-4df8-a458-8828860cf4e1",
+      "name": "IF node: Is LinkedIn data ready?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        128,
+        -128
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "amount": 1,
+        "unit": "minutes"
+      },
+      "id": "c7cf8be0-5224-4282-b036-ed71586329f5",
+      "name": "Waits before rechecking LinkedIn scraping",
+      "type": "n8n-nodes-base.wait",
+      "position": [
+        400,
+        224
+      ],
+      "webhookId": "7047efad-de41-4608-b95c-d3e0203ef620",
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "f01bd215-c406-493c-a6e4-2b8ec5686b44",
+              "operator": {
+                "type": "number",
+                "operation": "notEquals"
+              },
+              "leftValue": "={{ $json.records }}",
+              "rightValue": "={{ 0 }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c46e4020-17ea-439d-a5b9-a772585cc54f",
+      "name": "Checks if any LinkedIn job records exist",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        448,
+        -144
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "url": "=https://api.brightdata.com/datasets/v3/snapshot/{{ $json.snapshot_id }}",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "format",
+              "value": "json"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_BRIGHTDATA_API_TOKEN"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "47d2c91d-4802-4243-90be-8069c7d2d37b",
+      "name": "Fetches scraped LinkedIn data using snapshot ID",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        768,
+        -160
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        768,
+        64
+      ],
+      "id": "87b5dffd-75fe-4ada-9ddf-7c0f27212836",
+      "name": "No results"
+    },
+    {
+      "parameters": {},
+      "id": "a5a795c8-7411-4e2f-abb9-bca38d8c5c3d",
+      "name": "Combines Google Search + LinkedIn job results",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        656,
+        -512
+      ],
+      "typeVersion": 3.2
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_DOCUMENT_ID",
+          "mode": "list"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Job Role": "={{ $json.job_title }}",
+            "Company": "={{ $json.company_name }}",
+            "Link to Apply": "={{ $json.url }}",
+            "Description": "={{ $json.job_summary }}",
+            "Date Posted": "={{ $json.job_posted_date }}",
+            "Log Date": "={{ new Date().toISOString().split('T')[0] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Job Role",
+              "displayName": "Job Role",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Link to Apply",
+              "displayName": "Link to Apply",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Description",
+              "displayName": "Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Date Posted",
+              "displayName": "Date Posted",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Log Date",
+              "displayName": "Log Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "cellFormat": "USER_ENTERED",
+          "useAppend": true
+        }
+      },
+      "id": "520c03af-03e6-488b-8cd5-2fc946791df3",
+      "name": "Update Google Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1072,
+        -512
+      ]
+    },
+    {
+      "parameters": {
+        "content": "⏱️ Wait – Retry LinkedIn status after 1 min\n",
+        "height": 240,
+        "color": 7
+      },
+      "id": "0f9875ab-6055-4be8-a027-768ec0a808b1",
+      "name": "Sticky Note - Wait",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        336,
+        160
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "📊 LinkedIn Data Found? – If yes, continue\n",
+        "height": 244,
+        "width": 232,
+        "color": 2
+      },
+      "id": "fa395859-767c-4ba8-82e8-78544662cc88",
+      "name": "Sticky Note - Data Found",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        368,
+        -208
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "### LinkedIn Job Scraper",
+        "height": 672,
+        "width": 1696,
+        "color": "#43324E"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -672,
+        -240
+      ],
+      "typeVersion": 1,
+      "id": "a5826e3d-56da-4a85-a664-4ecfb7c1efcf",
+      "name": "Sticky Note - Main Section"
+    },
+    {
+      "parameters": {
+        "content": "## Google Search",
+        "height": 304,
+        "width": 1408,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -544,
+        -624
+      ],
+      "typeVersion": 1,
+      "id": "9ce53d44-05fc-4b30-88e2-2a9042de874a",
+      "name": "Sticky Note - Google Search Section"
+    },
+    {
+      "parameters": {
+        "content": "✅ Is LinkedIn Ready? – Proceed or wait\n",
+        "height": 248,
+        "width": 220,
+        "color": 6
+      },
+      "id": "01e1711e-bf5c-4936-96a3-875899788555",
+      "name": "Sticky Note - Status Check",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        96,
+        -208
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Scraped Data Updated to Google Sheets ",
+        "height": 288,
+        "width": 272,
+        "color": "#288406"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1008,
+        -640
+      ],
+      "typeVersion": 1,
+      "id": "c8227176-3e4b-4fa9-9070-01f1b6492961",
+      "name": "Sticky Note - Google Sheets Section"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Set Search Parameters": {
+      "main": [
+        [
+          {
+            "node": "Fetch LinkedIn Jobs RSS (24h)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch LinkedIn Jobs RSS (24h)": {
+      "main": [
+        [
+          {
+            "node": "Format Job Metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Job Metadata": {
+      "main": [
+        [
+          {
+            "node": "Combines Google Search + LinkedIn job results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formats form input for Bright Data LinkedIn API": {
+      "main": [
+        [
+          {
+            "node": "Triggers job scraping on LinkedIn via Bright Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Triggers job scraping on LinkedIn via Bright Data": {
+      "main": [
+        [
+          {
+            "node": "Checks if LinkedIn scraping is completed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Checks if LinkedIn scraping is completed": {
+      "main": [
+        [
+          {
+            "node": "IF node: Is LinkedIn data ready?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF node: Is LinkedIn data ready?": {
+      "main": [
+        [
+          {
+            "node": "Checks if any LinkedIn job records exist",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Waits before rechecking LinkedIn scraping",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Waits before rechecking LinkedIn scraping": {
+      "main": [
+        [
+          {
+            "node": "Checks if LinkedIn scraping is completed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Checks if any LinkedIn job records exist": {
+      "main": [
+        [
+          {
+            "node": "Fetches scraped LinkedIn data using snapshot ID",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetches scraped LinkedIn data using snapshot ID": {
+      "main": [
+        [
+          {
+            "node": "Combines Google Search + LinkedIn job results",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "No results": {
+      "main": [
+        [
+          {
+            "node": "Combines Google Search + LinkedIn job results",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Combines Google Search + LinkedIn job results": {
+      "main": [
+        [
+          {
+            "node": "Update Google Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Set Search Parameters",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Formats form input for Bright Data LinkedIn API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "tags": []
+}
