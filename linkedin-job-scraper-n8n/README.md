@@ -3,6 +3,8 @@ Finding jobs manually can take a lot of time. we need to search for jobs, check 
 This automation does those repetitive tasks for us
 when providing with a **job title** and choose whether we want **remote jobs**. The workflow searches for relevant LinkedIn jobs, collects the job details, and automatically adds them to a **Google Sheet**.
 
+**[Workflow Pipeline](workflow-pipeline.png)**
+
 ### 💡 How It Works
 ```text
 You
@@ -104,9 +106,7 @@ The final results are stored in Google Sheets with the following information:
 | **Date Posted**   | Date the job was posted             |
 | **Log Date**      | Date the workflow processed the job |
 
-
-![Google Sheets Preview](sheets-preview.png)
-
+[Google Sheets Preview](sheets-preview.png)
 
 New job results are **added to the existing sheet**, so previous records are not removed.
 ## 🛠️ Tools Used
