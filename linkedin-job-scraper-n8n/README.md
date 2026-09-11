@@ -4,7 +4,7 @@ This automation does those repetitive tasks for us
 when providing with a **job title** and choose whether we want **remote jobs**. The workflow searches for relevant LinkedIn jobs, collects the job details, and automatically adds them to a **Google Sheet**.
 
 ---
-## 💡 How It Works
+### 💡 How It Works
 ```text
 You
  │
@@ -31,7 +31,7 @@ The workflow uses two sources to find jobs:
 The results from both sources are combined and saved into one Google Sheet.
 ---
 
-## 📥 What Do I Need to Provide?
+### 📥 What Do I Need to Provide?
 The automation expects two simple inputs:
 
 | Input      | What it means                       | Example            |
@@ -57,7 +57,7 @@ we can also search for other roles:
 If we don't provide these values, the workflow uses **n8n** as the job title and **remote jobs** as the default.
 ---
 
-## ⚙️ What Needs to Be Configured?
+### ⚙️ What Needs to Be Configured?
 Before running the workflow, need to configure:
 
 ### 1. Bright Data
@@ -72,7 +72,7 @@ The workflow provides a webhook that accepts the job search request.
 Once these are configured, the workflow is ready to use.
 ---
 
-## 📦 How to Set It Up
+### 📦 How to Set It Up
 1. Open your **n8n** account.
 2. Import the workflow JSON from this repository.
 3. Connect to the **Google Sheets account**.
@@ -81,7 +81,7 @@ Once these are configured, the workflow is ready to use.
 6. Save and activate the workflow.
 ---
 
-## ▶️ How to Run It
+### ▶️ How to Run It
 The workflow is triggered through a webhook.
 ### Example
 ```bash
@@ -101,7 +101,7 @@ YOUR_N8N_WEBHOOK_URL
 with your n8n webhook URL.
 ---
 
-## 🔄 What Happens After Running It?
+### 🔄 What Happens After Running It?
 Once the request is received, the workflow automatically:
 
 1. Searches for recent LinkedIn jobs.
@@ -113,7 +113,7 @@ Once the request is received, the workflow automatically:
 If the LinkedIn data is not ready yet, the workflow waits and checks again automatically.
 ---
 
-## 📊 Google Sheets Output
+### 📊 Google Sheets Output
 The final results are stored in Google Sheets with the following information:
 
 | Column            | Description                         |
