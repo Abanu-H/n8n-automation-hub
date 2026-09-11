@@ -35,24 +35,9 @@ The automation expects two simple inputs:
 
 | Input      | What it means                       | Example            |
 | - | -- |  |
-| `jobTitle` | The type of job you are looking for | `Golang Developer` |
+| `jobTitle` | The type of job you are looking for | `Golang Developer\ python \ ETL developer` |
 | `isRemote` | Whether you want remote jobs        | `true`             |
 
-### Example
-```json
-{
-  "jobTitle": "Golang Developer",
-  "isRemote": true
-}
-```
-
-we can also search for other roles:
-```json
-{
-  "jobTitle": "Data Engineer",
-  "isRemote": true
-}
-```
 If we don't provide these values, the workflow uses **n8n** as the job title and **remote jobs** as the default.
 
 ### ⚙️ What Needs to Be Configured?
@@ -119,7 +104,7 @@ The final results are stored in Google Sheets with the following information:
 | **Date Posted**   | Date the job was posted             |
 | **Log Date**      | Date the workflow processed the job |
 
-![Google Sheets Preview](./sheets-preview.png)
+![Google Sheets Preview](sheets-preview.png)
 
 New job results are **added to the existing sheet**, so previous records are not removed.
 ## 🛠️ Tools Used
