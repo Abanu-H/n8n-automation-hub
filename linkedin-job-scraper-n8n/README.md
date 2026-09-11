@@ -71,7 +71,7 @@ Once these are configured, the workflow is ready to use.
 
 ### 📦 How to Set It Up
 1. Open your **n8n** account.
-2. Import the workflow JSON from this repository.
+2. Import the workflow JSON from this repository. (linkedin-job-scraper.json)
 3. Connect to the **Google Sheets account**.
 4. Add the **Bright Data API token**.
 5. Select the Google Sheet where you want to save the jobs.
@@ -118,6 +118,8 @@ The final results are stored in Google Sheets with the following information:
 | **Description**   | Job description                     |
 | **Date Posted**   | Date the job was posted             |
 | **Log Date**      | Date the workflow processed the job |
+
+![Google Sheets Preview](./sheets-preview.png)
 
 New job results are **added to the existing sheet**, so previous records are not removed.
 ## 🛠️ Tools Used
