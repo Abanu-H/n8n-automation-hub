@@ -3,7 +3,6 @@ Finding jobs manually can take a lot of time. we need to search for jobs, check 
 This automation does those repetitive tasks for us
 when providing with a **job title** and choose whether we want **remote jobs**. The workflow searches for relevant LinkedIn jobs, collects the job details, and automatically adds them to a **Google Sheet**.
 
----
 ### 💡 How It Works
 ```text
 You
@@ -29,13 +28,13 @@ The workflow uses two sources to find jobs:
 * 💼 **Bright Data** — collects structured LinkedIn job information
 
 The results from both sources are combined and saved into one Google Sheet.
----
+
 
 ### 📥 What Do I Need to Provide?
 The automation expects two simple inputs:
 
 | Input      | What it means                       | Example            |
-| ---------- | ----------------------------------- | ------------------ |
+| - | -- |  |
 | `jobTitle` | The type of job you are looking for | `Golang Developer` |
 | `isRemote` | Whether you want remote jobs        | `true`             |
 
@@ -55,7 +54,6 @@ we can also search for other roles:
 }
 ```
 If we don't provide these values, the workflow uses **n8n** as the job title and **remote jobs** as the default.
----
 
 ### ⚙️ What Needs to Be Configured?
 Before running the workflow, need to configure:
@@ -70,7 +68,6 @@ Connect the **Google Sheets account** and select the spreadsheet where we want t
 ### 3. Webhook
 The workflow provides a webhook that accepts the job search request.
 Once these are configured, the workflow is ready to use.
----
 
 ### 📦 How to Set It Up
 1. Open your **n8n** account.
@@ -79,7 +76,6 @@ Once these are configured, the workflow is ready to use.
 4. Add the **Bright Data API token**.
 5. Select the Google Sheet where you want to save the jobs.
 6. Save and activate the workflow.
----
 
 ### ▶️ How to Run It
 The workflow is triggered through a webhook.
@@ -99,7 +95,6 @@ Replace:
 YOUR_N8N_WEBHOOK_URL
 ```
 with your n8n webhook URL.
----
 
 ### 🔄 What Happens After Running It?
 Once the request is received, the workflow automatically:
@@ -111,13 +106,12 @@ Once the request is received, the workflow automatically:
 5. Adds the results to Google Sheets.
 
 If the LinkedIn data is not ready yet, the workflow waits and checks again automatically.
----
 
 ### 📊 Google Sheets Output
 The final results are stored in Google Sheets with the following information:
 
 | Column            | Description                         |
-| ----------------- | ----------------------------------- |
+| -- | -- |
 | **Job Role**      | Job title                           |
 | **Company**       | Company name                        |
 | **Link to Apply** | Job application link                |
@@ -126,8 +120,6 @@ The final results are stored in Google Sheets with the following information:
 | **Log Date**      | Date the workflow processed the job |
 
 New job results are **added to the existing sheet**, so previous records are not removed.
----
-
 ## 🛠️ Tools Used
 * **n8n** — Automates the workflow
 * **Google News RSS** — Finds recent LinkedIn job postings
